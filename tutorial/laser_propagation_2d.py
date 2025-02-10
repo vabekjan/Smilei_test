@@ -9,7 +9,7 @@ t0 = l0                  # optical cycle
 Lsim = [32.*l0, 32.*l0]  # length of the simulation
 Tsim = 50.*t0            # duration of the simulation
 resx = 16.               # nb of cells in one laser wavelength
-rest = resx*sqt(2.)/0.95 # nb of timesteps in one optical cycle 
+rest = resx*sqrt(2.)/0.95 # nb of timesteps in one optical cycle 
 
 Main(
     geometry = "2Dcartesian",
