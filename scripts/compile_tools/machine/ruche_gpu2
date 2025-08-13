@@ -7,16 +7,16 @@
 
 # Compile command: make -j 40  machine="ruche_gpu2" config="gpu_nvidia noopenmp detailed_timers verbose"
 
-SMILEICXX_DEPS = g++ #nvcc -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/openmpi-4.1.5-ckfuippq6gf6qsilwitd7d2zyd5bng32/include/ -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/hdf5-1.12.0-3em63nl4p5tmv37offfmuvz2uswvgwzv/include/
+SMILEICXX_DEPS = g++ -I/gpfs/users/prouveurc/tools/hdfsrc/install/include/   #nvcc -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/openmpi-4.1.5-ckfuippq6gf6qsilwitd7d2zyd5bng32/include/ -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/hdf5-1.12.0-3em63nl4p5tmv37offfmuvz2uswvgwzv/include/
 
-GPU_COMPILER = nvcc -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/openmpi-4.1.5-ckfuippq6gf6qsilwitd7d2zyd5bng32/include/ -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/hdf5-1.12.0-3em63nl4p5tmv37offfmuvz2uswvgwzv/include/
+GPU_COMPILER = nvcc -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/openmpi-4.1.5-ckfuippq6gf6qsilwitd7d2zyd5bng32/include/ -I/gpfs/users/prouveurc/tools/hdfsrc/install/include/  #-I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/hdf5-1.12.0-3em63nl4p5tmv37offfmuvz2uswvgwzv/include/
 
 CXXFLAGS += -w
 # IDRIS config for curand
-CXXFLAGS += -gpu=cc70,cc80 -acc -std=c++14  -lcurand #-ta=tesla:cc70 -std=c++14  -lcurand -cudalib=curand # do not put -cuda here
+CXXFLAGS += -gpu=cc80 -acc=gpu -std=c++14  -lcurand #-ta=tesla:cc70 -std=c++14  -lcurand -cudalib=curand # do not put -cuda here
 # CXXFLAGS += --expt-relaxed-constexpr
 
-ACCELERATOR_CUDA_FLAGS += -w -gpu=cc70,cc80 -cuda -std=c++14  -lcurand #not used at the moment
+#ACCELERATOR_CUDA_FLAGS += -w -gpu=cc70,cc80 -cuda -std=c++14  -lcurand #not used at the moment
 
 
 GPU_COMPILER_FLAGS += -O3 --std c++14
@@ -31,8 +31,8 @@ CXXFLAGS        += -Minfo=accel # what is offloaded/copied
 # GPU_COMPILER_FLAGS +=         -DSMILEI_ACCELERATOR_GPU_OMP # Can't we pass the -mp=gpu to nvcc when compiling a .cu file ?
 # LDFLAGS                      += -mp=gpu
 
-LDFLAGS +=  -L/gpfs/softs/spack_0.17/opt/spack/linux-centos7-cascadelake/gcc-11.2.0/gettext-0.21-bppg5g6ijfrvi7sdylhhg3t5f6v2fh2x/lib/
-LDFLAGS += -L/gpfs/softs/spack_0.17/opt/spack/linux-centos7-cascadelake/nvhpc-23.7/cuda-11.8.0-j62qyr3fdv4uuxx3kln3ckwo4xoqrntx/lib64/ -gpu=cc70,cc80 -acc -cuda -cudalib=curand -lcurand 
+LDFLAGS += -L/gpfs/softs/spack_0.17/opt/spack/linux-centos7-cascadelake/gcc-11.2.0/gettext-0.21-bppg5g6ijfrvi7sdylhhg3t5f6v2fh2x/lib/ -I/gpfs/users/prouveurc/tools/hdfsrc/install/lib  #-L/gpfs/softs/spack_0.17/opt/spack/linux-centos7-haswell/nvhpc-23.7/hdf5-1.12.0-3em63nl4p5tmv37offfmuvz2uswvgwzv/lib
+LDFLAGS += -L/gpfs/softs/spack_0.17/opt/spack/linux-centos7-cascadelake/nvhpc-23.7/cuda-11.8.0-j62qyr3fdv4uuxx3kln3ckwo4xoqrntx/lib64/ -gpu=cc80 -acc=gpu -cuda -cudalib=curand -lcurand 
 CXXFLAGS += -D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1 -I/gpfs/softs/spack_0.17/opt/spack/linux-centos7-cascadelake/nvhpc-23.7/cuda-11.8.0-j62qyr3fdv4uuxx3kln3ckwo4xoqrntx/include -std=c++14 
 
 
