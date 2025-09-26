@@ -35,7 +35,9 @@ RUN pip3 install -U --no-cache-dir \
     numpy==1.26.4 \
     scipy==1.11.3 \ 
     pint \
-    sphinx
+    sphinx \
+    ipympl==0.9.3 \
+    ipywidgets==8.1.3
     
 
 
