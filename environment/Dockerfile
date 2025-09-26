@@ -22,7 +22,10 @@ RUN apt-get update \
         libhdf5-mpich-dev \
         libhdf5-openmpi-dev \
         ffmpeg \
+        bash-completion \
     && rm -rf /var/lib/apt/lists/*
+
+RUN echo 'if [ -f /etc/bash_completion ]; then . /etc/bash_completion; fi' >> /root/.bashrc
 
 
 RUN pip3 install -U --no-cache-dir \
@@ -39,5 +42,9 @@ RUN pip3 install -U --no-cache-dir \
     ipympl==0.9.3 \
     ipywidgets==8.1.3
     
+# 3. Make JupyterLab terminals start Bash (login shell) instead of sh
+RUN jupyter server --generate-config && \
+    printf "\nc.ServerApp.terminado_settings = {'shell_command': ['/bin/bash','-l']}\n" \
+    >> /root/.jupyter/jupyter_server_config.py
 
-
+ENV SHELL=/bin/bash
