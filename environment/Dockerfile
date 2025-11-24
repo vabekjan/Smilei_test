@@ -30,14 +30,22 @@ RUN apt-get update \
         # libxkbcommon0 libxkbcommon-x11-0 \
         # libdbus-1-3 xauth \
         libgl1 \
-        libx11-6 libxext6 libxrender1 \
-        libx11-xcb1 libxcb1 libxi6 libsm6 libice6 libxtst6 \
-        libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 xauth \
-        libglib2.0-0 libfontconfig1 libfreetype6 \
-        libxcb-render0 libxcb-render-util0 \
+        libx11-6 libxext6 libxrender1 libx11-xcb1 \
+        libxcb1 libxcb-render0 libxcb-render-util0 \
         libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
         libxcb-randr0 libxcb-shape0 libxcb-xfixes0 \
         libxcb-xinerama0 libxcb-xkb1 libxcb-cursor0 libxcb-xinput0 \
+        libxkbcommon0 libxkbcommon-x11-0 \
+        libdbus-1-3 xauth \
+        libglib2.0-0 libfontconfig1 libfreetype6 \
+        libsm6 libice6 libxtst6 \
+        # ---- QtWebEngine (Chromium) runtime deps ----
+        libnss3 libnspr4 \
+        libxcomposite1 libxrandr2 libxdamage1 libxfixes3 \
+        libxshmfence1 libgbm1 libdrm2 \
+        libasound2 \
+        libxss1 \
+        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo 'if [ -f /etc/bash_completion ]; then . /etc/bash_completion; fi' >> /root/.bashrc
@@ -59,7 +67,7 @@ RUN pip3 install -U --no-cache-dir \
     jupyterlab-h5web==12.5.0 \
     spyder==6.0.0 \
     spyder-kernels==3.0.0 \
-    PyQt6
+    PyQt6 PyQt6-Qt6 PyQt6-sip PyQt6-WebEngine
     
 # 3. Make JupyterLab terminals start Bash (login shell) instead of sh
 RUN jupyter server --generate-config && \
@@ -67,5 +75,11 @@ RUN jupyter server --generate-config && \
     >> /root/.jupyter/jupyter_server_config.py
 
 ENV SHELL=/bin/bash
-ENV QT_X11_NO_MITSHM=1
+ENV QT_API=pyqt6
 ENV QT_QPA_PLATFORM=xcb
+ENV QT_X11_NO_MITSHM=1
+ENV QTWEBENGINE_DISABLE_SANDBOX=1
+ENV QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-gpu"
+ENV XDG_RUNTIME_DIR=/tmp/runtime-root
+
+RUN mkdir -p /tmp/runtime-root && chmod 700 /tmp/runtime-root
