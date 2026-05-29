@@ -8,7 +8,7 @@ from math import pi, cos, sin, tan, asin, atan
 import numpy as np
 
 
-l0 = 2.0*pi              # laser wavelength
+l0 = 2.0*np.pi              # laser wavelength
 t0 = l0                       # optical cicle
 Lsim = [10.*l0,8.*l0,5.*l0]  # length of the simulation
 Tsim = 18.*t0                 # duration of the simulation
@@ -99,9 +99,9 @@ def Bfield(x,t):
 
 xfix = 0.
 def Bfield_xplane(xfix):
-    def B1(y_,z_,t_)
+    def B1(y_,z_,t_):
         return transform_vector_field(R('z',ang[1])@R('y',ang[0]),Bfield,selection=(1,))(xfix,y_,z_,t_)
-    def B2(y_,z_,t_)
+    def B2(y_,z_,t_):
         return transform_vector_field(R('z',ang[1])@R('y',ang[0]),Bfield,selection=(2,))(xfix,y_,z_,t_)
     return [B1, B2]
     
@@ -125,7 +125,7 @@ Main(
 
 Laser(
     box_side = "xmin",
-    space_time_profile = [ By_profile, Bz_profile ]
+    space_time_profile = Bfield_xplane(0.) #[ By_profile, Bz_profile ],
 )
 
 # time_envelope = tgaussian(fwhm=t0*6, center=t0*9)
