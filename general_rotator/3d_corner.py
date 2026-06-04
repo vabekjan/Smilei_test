@@ -15,6 +15,11 @@ Tsim = 18.*t0                 # duration of the simulation
 resx = 12.                    # nb of cells in one laser wavelength
 rest = 22.                    # nb of timesteps in one optical cycle 
 
+a0 = 1.
+omega = 1.
+waist = l0
+fwhm = 6.*t0
+
 
 # ang = [-pi/7., pi/6.] # angle as defined by the smilei tutorial
 ang = [0.,0.] # angle as defined by the smilei tutorial
@@ -46,7 +51,7 @@ def RotM(axis,angle):
                            [ 0            ,  0            ,  1 ]]) 
 
 ### Transformation function
-def transform_vector_field(R,offset,vector,selection=(0,1,2)):
+def transform_vector_field(R,offset,vector,selection=(0,1,2),vectorised=True):
     """
     Tranform a vector field V=`vector` according to the general rotation V'(x')=R*V(RT*x'+offset),
     coordinate notation follows the documents.
@@ -54,21 +59,83 @@ def transform_vector_field(R,offset,vector,selection=(0,1,2)):
     offset - offset vector
     vector - vector field represented by a function with 3 components taking (x,t) arguments, x is 3-component spatial, t is time
     selection - select output projections, labeled by components 0, 1, 2, allows permutations and dimension reduction
+    vectorised - switch to allow variable casting for array-like inputs for vectorised evaluation
 
     output - vector field represented by a function inlcuding selection
     """
     # def vector_transformed(x_):
     #     return np.asarray([(R@vector((np.transpose(R)@x_) + offset))[idx] for idx in selection])
-    def vector_field_transformed(x_,t_):
-        return np.asarray([(np.transpose(R)@vector(R@(x_ - offset),t_))[idx] for idx in selection])
+    if not(vectorised):
+        def vector_field_transformed(x_,t_):
+            return np.asarray([(np.transpose(R)@vector(R@(x_ - offset),t_))[idx] for idx in selection])
+    else:
+        # Exactly same as above just handle shape-casting of x_ and t_
+        # It uses np.einsum to contract matrix operations over the required indices
+        def vector_field_transformed(x_, t_):
+    
+            off = np.asarray(offset).reshape(
+                (3,) + (1,) * (x_.ndim - 1)
+            )
+    
+            x_rot = np.einsum(
+                'ij,j...->i...',
+                R,
+                x_ - off
+            )
+    
+            vec = vector(x_rot, t_)
+    
+            vec_rot = np.einsum(
+                'ij,j...->i...',
+                R.T,
+                vec
+            )
+    
+            return np.asarray(
+                [vec_rot[idx] for idx in selection]
+            )
+
     return vector_field_transformed
+    
+
 
 ### General Gaussian beam represented by B-field
-waist = l0
-a0    = 1.
-omega = 1.
+# linearly polarised
 
-fwhm = t0*0.6
+
+# waist = l0
+# a0    = 1.
+# omega = 1.
+
+# fwhm = t0*0.6
+# def time_envelope(t):
+#     sigma = (0.5*fwhm)**2/np.log(2.0)
+#     return np.exp( -(t)**2 / sigma )
+
+# # derived quatities
+# k0 = 1.
+# zR = omega * waist**2/2.
+
+# def B_Gauss_lin(x, t):
+
+#     r2 = x[1]**2 + x[2]**2
+#     w = l0 * np.sqrt(1.0 + (x[0]/zR)**2)
+#     invR = x[0] / (x[0]**2 + zR**2)
+#     gouy = np.arctan(x[0] / zR)
+    
+#     phase = (omega*t - k0*x - 0.5 * r2 * invR  + gouy)
+#     envelope = ((waist/w)*np.exp(-r2/w**2)*time_envelope(t - x[0])
+#     )
+
+#     return a0 * envelope * np.cos(phase)
+    
+# def Bfield(x,t):
+#     return np.asarray([
+#         0,
+#         B_Gauss_lin(x, t),
+#         0        
+#         ])
+
 def time_envelope(t):
     sigma = (0.5*fwhm)**2/np.log(2.0)
     return np.exp( -(t)**2 / sigma )
@@ -84,27 +151,22 @@ def B_Gauss_lin(x, t):
     invR = x[0] / (x[0]**2 + zR**2)
     gouy = np.arctan(x[0] / zR)
     
-    phase = (omega*t - k0*x - 0.5 * r2 * invR  + gouy)
+    phase = (omega*t - k0*x[0] - 0.5 * r2 * invR  + gouy)
     envelope = ((waist/w)*np.exp(-r2/w**2)*time_envelope(t - x[0])
     )
 
     return a0 * envelope * np.cos(phase)
+
+t_offset = 5. # define time offset for the pulse 
+# !!! TIMING HAS TO BE SYNCED ACROSS DIFFERENT BEAMS IN FUTURE
     
 def Bfield(x,t):
     return np.asarray([
-        0,
+        0.,
         B_Gauss_lin(x, t),
-        0        
+        0.        
         ])
-
-xfix = 0.
-def Bfield_xplane(xfix):
-    def B1(y_,z_,t_):
-        return transform_vector_field(R('z',ang[1])@R('y',ang[0]),Bfield,selection=(1,))(xfix,y_,z_,t_)
-    def B2(y_,z_,t_):
-        return transform_vector_field(R('z',ang[1])@R('y',ang[0]),Bfield,selection=(2,))(xfix,y_,z_,t_)
-    return [B1, B2]
-    
+  
     
 
 Main(
@@ -123,9 +185,20 @@ Main(
     EM_boundary_conditions = [ ['PML'] ],
 )
 
+# Partial definitions of the rotated field selecting given components following Smilei syntax
+
+# The part of the laser originating from the xmin-plane
+xfix = 0.
+def Bfield_xplane(xfix_):
+    def B1(y_,z_,t_):
+        return transform_vector_field(RotM('z',ang[1])@RotM('y',ang[0]),focus,Bfield,selection=(1,))(np.asarray([xfix_,y_,z_]),t_)
+    def B2(y_,z_,t_):
+        return transform_vector_field(RotM('z',ang[1])@RotM('y',ang[0]),focus,Bfield,selection=(2,))(np.asarray([xfix_,y_,z_]),t_)
+    return [B1, B2]
+    
 Laser(
     box_side = "xmin",
-    space_time_profile = Bfield_xplane(0.) #[ By_profile, Bz_profile ],
+    space_time_profile = Bfield_xplane(xfix) #[ By_profile, Bz_profile ],
 )
 
 # time_envelope = tgaussian(fwhm=t0*6, center=t0*9)
