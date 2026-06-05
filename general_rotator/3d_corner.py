@@ -11,7 +11,7 @@ import numpy as np
 l0 = 2.0*np.pi              # laser wavelength
 t0 = l0                       # optical cicle
 Lsim = [10.*l0,8.*l0,5.*l0]  # length of the simulation
-Tsim = 18.*t0                 # duration of the simulation
+Tsim = 25.*t0                 # duration of the simulation
 resx = 12.                    # nb of cells in one laser wavelength
 rest = 22.                    # nb of timesteps in one optical cycle 
 
@@ -19,6 +19,9 @@ a0 = 1.
 omega = 1.
 waist = l0
 fwhm = 6.*t0
+
+t_offset = 5. # define time offset for the pulse 
+# !!! TIMING HAS TO BE SYNCED ACROSS DIFFERENT BEAMS IN FUTURE
 
 
 # ang = [-pi/7., pi/6.] # angle as defined by the smilei tutorial
@@ -157,13 +160,13 @@ def B_Gauss_lin(x, t):
 
     return a0 * envelope * np.cos(phase)
 
-t_offset = 5. # define time offset for the pulse 
-# !!! TIMING HAS TO BE SYNCED ACROSS DIFFERENT BEAMS IN FUTURE
+# t_offset = 5. # define time offset for the pulse 
+# # !!! TIMING HAS TO BE SYNCED ACROSS DIFFERENT BEAMS IN FUTURE
     
 def Bfield(x,t):
     return np.asarray([
         0.,
-        B_Gauss_lin(x, t),
+        B_Gauss_lin(x, t-t_offset),
         0.        
         ])
   
