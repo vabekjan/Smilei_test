@@ -60,6 +60,8 @@ RUN pip3 install -U --no-cache-dir \
     matplotlib==3.8.3 \
     numpy==1.26.4 \
     scipy==1.11.3 \ 
+    sympy==1.14.0 \
+    pytest \
     pint \
     sphinx \
     ipympl==0.9.3 \
